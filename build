@@ -1,0 +1,5 @@
+echo "Building core..."
+CGO_ENABLED=0 godep go build \
+    -a -tags netgo -installsuffix netgo \
+    -o bin/core \
+    github.com/ecnahc515/core
