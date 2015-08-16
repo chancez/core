@@ -1,0 +1,22 @@
+{
+	"ImportPath": "github.com/coreos/corex",
+	"GoVersion": "go1.4.2",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "code.google.com/p/go-uuid/uuid",
+			"Comment": "null-15",
+			"Rev": "35bc42037350f0078e3c974c6ea690f1926603ab"
+		},
+		{
+			"ImportPath": "github.com/coreos/pkg/capnslog",
+			"Rev": "99f6e6b8f8ea30b0f82769c1411691c44a66d015"
+		},
+		{
+			"ImportPath": "github.com/coreos/pkg/flagutil",
+			"Rev": "99f6e6b8f8ea30b0f82769c1411691c44a66d015"
+		}
+	]
+}
