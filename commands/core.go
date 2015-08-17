@@ -28,10 +28,12 @@ func Execute() {
 
 func AddCommands() {
 	CoreCmd.AddCommand(runCmd)
+	CoreCmd.AddCommand(fetchCmd)
 }
 
 func init() {
 	CoreCmd.PersistentFlags().StringVar(&logLevel, "log-level", "", "level of logging information by package (pkg=level)")
+	CoreCmd.PersistentFlags().StringVar(&cfg.ImageDirectory, "image-dir", "imgs/", "Directory of where images are located")
 }
 
 func InitializeConfig() {

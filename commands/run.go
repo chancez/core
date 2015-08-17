@@ -22,7 +22,6 @@ func init() {
 	runCmd.PersistentFlags().StringVar(&cfg.UUID, "uuid", "", "UUID for the VM. Must be a V4 UUID")
 	runCmd.PersistentFlags().StringVar(&cfg.Version, "version", "773.1.0", "CoreOS image version")
 	runCmd.PersistentFlags().StringVar(&cfg.Channel, "channel", "alpha", "CoreOS image channel")
-	runCmd.PersistentFlags().StringVar(&cfg.ImageDirectory, "image-dir", "imgs", "Directory of where images are located")
 	runCmd.PersistentFlags().IntVar(&cfg.CPUs, "cpus", 1, "Number of CPUs to allocate to VM")
 	runCmd.PersistentFlags().IntVar(&cfg.Memory, "memory", 1024, "Amount of memory in MB to dedicate to VM")
 	runCmd.PersistentFlags().StringVar(&cfg.Root, "root", "", "Path to disk image to be used as the root disk of the VM")
