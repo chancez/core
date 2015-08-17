@@ -3,6 +3,7 @@ package xhyve
 import (
 	"fmt"
 	"os/exec"
+	"path"
 	"strconv"
 
 	"code.google.com/p/go-uuid/uuid"
@@ -71,8 +72,8 @@ func Command(cfg Config) (*exec.Cmd, error) {
 	cmdline = fmt.Sprintf("%s %s", cmdline, cfg.Cmdline)
 
 	payload := fmt.Sprintf("%s.%s.coreos_production_pxe", cfg.Channel, cfg.Version)
-	vmlinuz := fmt.Sprintf("%s/%s.vmlinuz", cfg.ImageDirectory, payload)
-	initrd := fmt.Sprintf("%s/%s_image.cpio.gz", cfg.ImageDirectory, payload)
+	vmlinuz := path.Join(cfg.ImageDirectory, fmt.Sprintf("%s.vmlinuz", payload))
+	initrd := path.Join(cfg.ImageDirectory, fmt.Sprintf("%s_image.cpio.gz", payload))
 	firmware := fmt.Sprintf("kexec,%s,%s,%s", vmlinuz, initrd, cmdline)
 
 	args = append(args, "-f", firmware)
