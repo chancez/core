@@ -27,8 +27,8 @@ func Execute() {
 }
 
 func AddCommands() {
-	CoreCmd.AddCommand(runCmd)
-	CoreCmd.AddCommand(fetchCmd)
+	CoreCmd.AddCommand(RunCmd)
+	CoreCmd.AddCommand(FetchCmd)
 }
 
 func init() {

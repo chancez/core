@@ -10,7 +10,7 @@ import (
 
 const defaultChannel = "alpha"
 
-var fetchCmd = &cobra.Command{
+var FetchCmd = &cobra.Command{
 	Use:   "fetch [channel] [version]",
 	Short: "Download a CoreOS image",
 	Long:  "Downloads a CoreOS image from release.core-os.net, storing it locally. Defaults to alpha channel if unspecified.",
