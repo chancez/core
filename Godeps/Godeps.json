@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/coreos/corex",
+	"ImportPath": "github.com/ecnahc515/core",
 	"GoVersion": "go1.4.2",
 	"Packages": [
 		"./..."
@@ -15,8 +15,16 @@
 			"Rev": "99f6e6b8f8ea30b0f82769c1411691c44a66d015"
 		},
 		{
-			"ImportPath": "github.com/coreos/pkg/flagutil",
-			"Rev": "99f6e6b8f8ea30b0f82769c1411691c44a66d015"
+			"ImportPath": "github.com/inconshreveable/mousetrap",
+			"Rev": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
+		},
+		{
+			"ImportPath": "github.com/spf13/cobra",
+			"Rev": "c55cdf33856a08e4822738728b41783292812889"
+		},
+		{
+			"ImportPath": "github.com/spf13/pflag",
+			"Rev": "4b69d21313e8b16259f8fdac37156283b254c84b"
 		}
 	]
 }
