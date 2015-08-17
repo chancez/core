@@ -2,6 +2,11 @@
 
 Core creates CoreOS virtual machines on OS X using Xhyve.
 
+
+## Usage
+
+Run `core --help` or `core help [subcommand]`
+
 ## Prerequisites
 
 - xhyve
