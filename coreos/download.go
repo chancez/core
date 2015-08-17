@@ -18,8 +18,6 @@ var plog = capnslog.NewPackageLogger("github.com/ecnahc515/core", "coreos")
 
 const (
 	rootUrl = "http://%s.release.core-os.net/amd64-usr/%s"
-	Vmlinuz = "coreos_production_pxe.vmlinuz"
-	Initrd  = "coreos_production_pxe_image.cpio.gz"
 )
 
 func getVersionURL(channel string) string {
