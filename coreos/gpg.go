@@ -1,5 +1,9 @@
 package coreos
 
+import (
+	"path"
+)
+
 // Image signing key: buildbot@coreos.com
 var gpgLongID = "50E0885593D2DCB4"
 var gpgKey = `-----BEGIN PGP PUBLIC KEY BLOCK-----
@@ -114,7 +118,7 @@ Pg==
 `
 
 func verify(fileName string, sigFileName string) error {
-	plog.Infof("Verifying signature of %s using signature file %s", fileName, sigFileName)
+	plog.Infof("Verifying signature of %s using signature file %s", path.Base(fileName), path.Base(sigFileName))
 	// pack, err := packet.Read(reader)
 	// if err != nil {
 	// 	return err
