@@ -46,16 +46,21 @@ func fetchImage(cmd *cobra.Command, args []string) {
 	signal.Notify(sigChan, os.Interrupt, os.Kill)
 	go func() {
 		<-sigChan
-		downloader.Cleanup()
+		downloader.Stop()
+		return
 	}()
 
 	err = downloader.Download(coreos.Vmlinuz)
 	if err != nil {
+		downloader.Cleanup()
 		plog.Fatalf("Error downloading %s to %s. err: %v", coreos.Vmlinuz, cfg.ImageDirectory, err)
+		return
 	}
 	err = downloader.Download(coreos.Initrd)
 	if err != nil {
+		downloader.Cleanup()
 		plog.Fatalf("Error downloading %s to %s. err: %v", coreos.Vmlinuz, cfg.ImageDirectory, err)
+		return
 	}
 	plog.Infof("Successfully downloaded CoreOS %s (%s)", channel, version)
 }

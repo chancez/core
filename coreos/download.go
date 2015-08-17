@@ -56,7 +56,7 @@ func GetVersionID(channel string) (string, error) {
 
 type Downloader struct {
 	stop           chan struct{}
-	cleanupDone    chan struct{}
+	stopDone       chan struct{}
 	Channel        string
 	Version        string
 	ImageDirectory string
@@ -66,7 +66,7 @@ type Downloader struct {
 func NewDownloader(channel, version, imageDirectory string) *Downloader {
 	return &Downloader{
 		stop:           make(chan struct{}),
-		cleanupDone:    make(chan struct{}),
+		stopDone:       make(chan struct{}),
 		Channel:        channel,
 		Version:        version,
 		ImageDirectory: imageDirectory,
@@ -105,12 +105,10 @@ func (d *Downloader) Download(file string) (err error) {
 			return err
 		}
 	case <-d.stop:
-		os.RemoveAll(d.tmpDir)
-		d.cleanupDone <- struct{}{}
+		d.Cleanup()
+		d.stopDone <- struct{}{}
 		return errors.New("Recieved cancel signal")
 	}
-
-	defer os.RemoveAll(d.tmpDir)
 
 	// move the files into the final location
 	var errs []error
@@ -131,9 +129,17 @@ func (d *Downloader) Download(file string) (err error) {
 }
 
 func (d *Downloader) Cleanup() {
+	if d.tmpDir == "" {
+		return
+	}
+	os.RemoveAll(d.tmpDir)
+}
+
+func (d *Downloader) Stop() {
 	d.stop <- struct{}{}
+	d.Cleanup()
 	// Wait until cleanup is finished
-	<-d.cleanupDone
+	<-d.stopDone
 }
 
 type DownloadResult struct {
