@@ -3,15 +3,22 @@ package coreos
 import (
 	"errors"
 	"fmt"
+	"os"
 	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
+
+	"github.com/ecnahc515/core/xhyve"
+)
+
+const (
+	Vmlinuz               = "coreos_production_pxe.vmlinuz"
+	Initrd                = "coreos_production_pxe_image.cpio.gz"
+	DefaultImageDirectory = "$HOME/.core/images"
 )
 
 var (
-	Vmlinuz          = "coreos_production_pxe.vmlinuz"
-	Initrd           = "coreos_production_pxe_image.cpio.gz"
 	re               = regexp.MustCompile("^alpha.([0-9.]+).coreos_production_pxe.vmlinuz$")
 	ErrNoLocalImages = errors.New("no local image files")
 )
@@ -32,4 +39,15 @@ func GetLatestImage(channel, imageDirectory string) (string, error) {
 		return "", ErrNoLocalImages
 	}
 	return matches[1], nil
+}
+
+func CreateImageDirIfNotExist(cfg *xhyve.Config) error {
+	if cfg.ImageDirectory == DefaultImageDirectory {
+		cfg.ImageDirectory = os.ExpandEnv(cfg.ImageDirectory)
+	}
+	if _, err := os.Stat(cfg.ImageDirectory); os.IsNotExist(err) {
+		plog.Debugf("Image directory %s does not exist, attempting to create it.", cfg.ImageDirectory)
+		return os.MkdirAll(cfg.ImageDirectory, 0700)
+	}
+	return nil
 }

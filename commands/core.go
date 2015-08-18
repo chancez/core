@@ -3,6 +3,8 @@ package commands
 import (
 	"os"
 
+	"github.com/ecnahc515/core/coreos"
+
 	"github.com/coreos/pkg/capnslog"
 	"github.com/ecnahc515/core/xhyve"
 	"github.com/spf13/cobra"
@@ -33,7 +35,7 @@ func AddCommands() {
 
 func init() {
 	CoreCmd.PersistentFlags().StringVar(&logLevel, "log-level", "", "level of logging information by package (pkg=level)")
-	CoreCmd.PersistentFlags().StringVar(&cfg.ImageDirectory, "image-dir", "imgs/", "Directory of where images are located")
+	CoreCmd.PersistentFlags().StringVar(&cfg.ImageDirectory, "image-dir", coreos.DefaultImageDirectory, "Directory of where images are located")
 }
 
 func InitializeConfig() {
@@ -48,5 +50,12 @@ func InitializeConfig() {
 		}
 		rl.SetLogLevel(llc)
 		plog.Printf("Setting log level to %s", logLevel)
+	}
+
+	if cfg.ImageDirectory == coreos.DefaultImageDirectory {
+		err := coreos.CreateImageDirIfNotExist(&cfg)
+		if err != nil {
+			plog.Errorf("Unable to create default image directory, err: %s", err)
+		}
 	}
 }
