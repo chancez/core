@@ -175,7 +175,8 @@ func Download(channel, version, file, imageDirectory string) (res DownloadResult
 	if err != nil {
 		return
 	}
-	plog.Infof("Signature verified!")
+	// plog.Infof("Signature verified!")
+	plog.Warning("Not verifying signatures (yet).")
 	return
 }
 
