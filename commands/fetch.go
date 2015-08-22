@@ -39,7 +39,7 @@ func fetchImage(cmd *cobra.Command, args []string) {
 	}
 	plog.Debugf("Channel: %s, Version: %s\n", channel, version)
 
-	downloader := coreos.NewDownloader(channel, version, cfg.ImageDirectory)
+	downloader := coreos.NewDownloader(channel, version, coreCfg.ImageDirectory)
 
 	// Setup signal handlers so we properly cleanup when we get a signal
 	sigChan := make(chan os.Signal, 1)
@@ -53,13 +53,13 @@ func fetchImage(cmd *cobra.Command, args []string) {
 	err = downloader.Download(coreos.Vmlinuz)
 	if err != nil {
 		downloader.Cleanup()
-		plog.Fatalf("Error downloading %s to %s. err: %v", coreos.Vmlinuz, cfg.ImageDirectory, err)
+		plog.Fatalf("Error downloading %s to %s. err: %v", coreos.Vmlinuz, coreCfg.ImageDirectory, err)
 		return
 	}
 	err = downloader.Download(coreos.Initrd)
 	if err != nil {
 		downloader.Cleanup()
-		plog.Fatalf("Error downloading %s to %s. err: %v", coreos.Vmlinuz, cfg.ImageDirectory, err)
+		plog.Fatalf("Error downloading %s to %s. err: %v", coreos.Vmlinuz, coreCfg.ImageDirectory, err)
 		return
 	}
 	plog.Infof("Successfully downloaded CoreOS %s (%s)", channel, version)

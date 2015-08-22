@@ -1,5 +1,9 @@
-echo "Building core..."
-CGO_ENABLED=0 godep go build \
-    -a -tags netgo -installsuffix netgo \
-    -o bin/core \
-    github.com/ecnahc515/core
+cmds=(core)
+
+for project in ${cmds}; do
+    echo "Building $project..."
+    CGO_ENABLED=0 godep go build \
+        -a -tags netgo -installsuffix netgo \
+        -o "bin/$project" \
+        "github.com/ecnahc515/core/cmd/$project"
+done

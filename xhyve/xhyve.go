@@ -3,25 +3,25 @@ package xhyve
 import (
 	"fmt"
 	"os/exec"
-	"path"
 	"strconv"
 
 	"code.google.com/p/go-uuid/uuid"
 )
 
 type Config struct {
-	CloudConfig    string
-	UUID           string
-	Version        string
-	Channel        string
-	CPUs           int
-	Memory         int
-	Root           string
-	XhyvePath      string
-	Cmdline        string
-	SSHKey         string
-	Extra          string
-	ImageDirectory string
+	UUID         string
+	CPUs         int
+	Memory       int
+	XhyvePath    string
+	Extra        []string
+	Disks        []string
+	KernelConfig KernelConfig
+}
+
+type KernelConfig struct {
+	Initrd  string
+	Vmlinuz string
+	Cmdline string
 }
 
 func (cfg Config) Validate() error {
@@ -56,27 +56,20 @@ func Command(cfg Config) (*exec.Cmd, error) {
 		"-U", cfg.UUID,
 	}
 
-	cmdline := "earlyprintk=serial console=ttyS0 coreos.autologin"
-	if cfg.CloudConfig != "" {
-		cmdline = fmt.Sprintf("%s cloud-config-url=%s", cmdline, cfg.CloudConfig)
+	for i, diskPath := range cfg.Disks {
+		disk := NewDisk(i, diskPath)
+		args = append(args, "-s", disk)
 	}
-	if cfg.SSHKey != "" {
-		cmdline = fmt.Sprintf("%s sshkey=%s", cmdline, cfg.SSHKey)
-	}
-	if cfg.Root != "" {
-		args = append(args,
-			"-s", fmt.Sprintf("4:0,virtio-blk,%s", cfg.Root),
-		)
-		cmdline = fmt.Sprintf("%s root=/dev/vda", cmdline)
-	}
-	cmdline = fmt.Sprintf("%s %s", cmdline, cfg.Cmdline)
 
-	payload := fmt.Sprintf("%s.%s.coreos_production_pxe", cfg.Channel, cfg.Version)
-	vmlinuz := path.Join(cfg.ImageDirectory, fmt.Sprintf("%s.vmlinuz", payload))
-	initrd := path.Join(cfg.ImageDirectory, fmt.Sprintf("%s_image.cpio.gz", payload))
-	firmware := fmt.Sprintf("kexec,%s,%s,%s", vmlinuz, initrd, cmdline)
+	args = append(args, cfg.Extra...)
 
+	firmware := fmt.Sprintf("kexec,%s,%s,%s",
+		cfg.KernelConfig.Vmlinuz, cfg.KernelConfig.Initrd, cfg.KernelConfig.Cmdline)
 	args = append(args, "-f", firmware)
 
 	return exec.Command(cfg.XhyvePath, args...), nil
+}
+
+func NewDisk(pciSlot int, path string) string {
+	return fmt.Sprintf("4:%d,virtio-blk,%s", pciSlot, path)
 }

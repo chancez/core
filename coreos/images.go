@@ -3,11 +3,12 @@ package coreos
 import (
 	"errors"
 	"fmt"
-	"os"
+	"io/ioutil"
 	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strings"
 
 	"github.com/ecnahc515/core/xhyve"
 )
@@ -41,13 +42,41 @@ func GetLatestImage(channel, imageDirectory string) (string, error) {
 	return matches[1], nil
 }
 
-func CreateImageDirIfNotExist(cfg *xhyve.Config) error {
-	if cfg.ImageDirectory == DefaultImageDirectory {
-		cfg.ImageDirectory = os.ExpandEnv(cfg.ImageDirectory)
+type Config struct {
+	Version        string
+	Channel        string
+	Cmdline        string
+	SSHKey         string
+	CloudConfig    string
+	ImageDirectory string
+	Root           string
+}
+
+func NewKernelConfig(cfg Config) (xhyve.KernelConfig, error) {
+	cmdline := "earlyprintk=serial console=ttyS0 coreos.autologin"
+	if cfg.SSHKey != "" {
+		contents, err := ioutil.ReadFile(cfg.SSHKey)
+		if err != nil {
+			return xhyve.KernelConfig{}, err
+		}
+		sshkey := strings.TrimSpace(string(contents))
+		cmdline = fmt.Sprintf("%s sshkey=\"%s\"", cmdline, sshkey)
 	}
-	if _, err := os.Stat(cfg.ImageDirectory); os.IsNotExist(err) {
-		plog.Debugf("Image directory %s does not exist, attempting to create it.", cfg.ImageDirectory)
-		return os.MkdirAll(cfg.ImageDirectory, 0700)
+	if cfg.CloudConfig != "" {
+		cmdline = fmt.Sprintf("%s cloud-config-url=%s", cmdline, cfg.CloudConfig)
 	}
-	return nil
+	// TODO: support more disks and don't hardcode the location
+	if cfg.Root != "" {
+		cmdline = fmt.Sprintf("%s root=/dev/vda", cmdline)
+	}
+	cmdline = fmt.Sprintf("%s %s", cmdline, cfg.Cmdline)
+
+	image := fmt.Sprintf("%s.%s.coreos_production_pxe", cfg.Channel, cfg.Version)
+	vmlinuz := path.Join(cfg.ImageDirectory, fmt.Sprintf("%s.vmlinuz", image))
+	initrd := path.Join(cfg.ImageDirectory, fmt.Sprintf("%s_image.cpio.gz", image))
+	return xhyve.KernelConfig{
+		Vmlinuz: vmlinuz,
+		Initrd:  initrd,
+		Cmdline: cmdline,
+	}, nil
 }

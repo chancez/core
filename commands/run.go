@@ -18,38 +18,61 @@ var RunCmd = &cobra.Command{
 	},
 }
 
+var (
+	coreCfg  coreos.Config
+	xhyveCfg xhyve.Config
+	dryRun   bool
+)
+
 func init() {
-	RunCmd.PersistentFlags().StringVar(&cfg.CloudConfig, "cloud-config", "", "URL or Path to a cloud-config")
-	RunCmd.PersistentFlags().StringVar(&cfg.UUID, "uuid", "", "UUID for the VM. Must be a V4 UUID")
-	RunCmd.PersistentFlags().StringVar(&cfg.Version, "version", "", "CoreOS image version")
-	RunCmd.PersistentFlags().StringVar(&cfg.Channel, "channel", "alpha", "CoreOS image channel")
-	RunCmd.PersistentFlags().IntVar(&cfg.CPUs, "cpus", 1, "Number of CPUs to allocate to VM")
-	RunCmd.PersistentFlags().IntVar(&cfg.Memory, "memory", 1024, "Amount of memory in MB to dedicate to VM")
-	RunCmd.PersistentFlags().StringVar(&cfg.Root, "root", "", "Path to disk image to be used as the root disk of the VM")
-	RunCmd.PersistentFlags().StringVar(&cfg.XhyvePath, "xhyve", "xhyve", "Path to the xhyve binary")
-	RunCmd.PersistentFlags().StringVar(&cfg.Cmdline, "cmdline", "", "Additional kernel cmdline parameters")
-	RunCmd.PersistentFlags().StringVar(&cfg.SSHKey, "sshkey", "", "Text version of ssh public key or if it's an absolute path, the file will be read.")
-	RunCmd.PersistentFlags().StringVar(&cfg.Extra, "extra", "", "Any extra parameters to pass to xhyve")
+	// Xhyve specific
+	RunCmd.PersistentFlags().StringVar(&xhyveCfg.UUID, "uuid", "", "UUID for the VM. Must be a V4 UUID")
+	RunCmd.PersistentFlags().IntVar(&xhyveCfg.CPUs, "cpus", 1, "Number of CPUs to allocate to VM")
+	RunCmd.PersistentFlags().IntVar(&xhyveCfg.Memory, "memory", 1024, "Amount of memory in MB to dedicate to VM")
+	RunCmd.PersistentFlags().StringVar(&xhyveCfg.XhyvePath, "xhyve", "xhyve", "Path to the xhyve binary")
+	RunCmd.PersistentFlags().StringSliceVar(&xhyveCfg.Extra, "extra", []string{}, "Any extra parameters to pass to xhyve")
+
+	// CoreOS specific
+	RunCmd.PersistentFlags().StringVar(&coreCfg.Root, "root", "", "Path to disk image to be used as the root disk of the VM")
+	RunCmd.PersistentFlags().StringVar(&coreCfg.Version, "version", "", "CoreOS image version")
+	RunCmd.PersistentFlags().StringVar(&coreCfg.Channel, "channel", "alpha", "CoreOS image channel")
+	RunCmd.PersistentFlags().StringVar(&coreCfg.CloudConfig, "cloud-config", "", "URL or Path to a cloud-config")
+	RunCmd.PersistentFlags().StringVar(&coreCfg.Cmdline, "cmdline", "", "Additional kernel cmdline parameters")
+	RunCmd.PersistentFlags().StringVar(&coreCfg.SSHKey, "sshkey", "", "Path to ssh public key")
+	RunCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "Do all of the setup, but do not start the VM")
 }
 
 func runXhyve() {
 	InitializeConfig()
-	if cfg.Version == "" {
+	if coreCfg.Version == "" {
 		var err error
-		cfg.Version, err = coreos.GetLatestImage(cfg.Channel, cfg.ImageDirectory)
+		coreCfg.Version, err = coreos.GetLatestImage(coreCfg.Channel, coreCfg.ImageDirectory)
 		if err != nil {
-			plog.Fatalf("couldn't find anything to load locally (%s channel). please run `core fetch` first. err: %v", cfg.Channel, err)
+			plog.Fatalf("couldn't find anything to load locally (%s channel). please run `core fetch` first. err: %v", coreCfg.Channel, err)
 		}
-		plog.Infof("No version specified, using latest local image: CoreOS %s (%s)", cfg.Channel, cfg.Version)
+		plog.Infof("No version specified, using latest local image: CoreOS %s (%s)", coreCfg.Channel, coreCfg.Version)
 	}
-	cmd, err := xhyve.Command(cfg)
+	kernelCfg, err := coreos.NewKernelConfig(coreCfg)
+	if err != nil {
+		plog.Fatalf("error creating kernel config: %v", err)
+	}
+	xhyveCfg.KernelConfig = kernelCfg
+	// TODO: support more disks
+	if coreCfg.Root != "" {
+		xhyveCfg.Disks = []string{coreCfg.Root}
+	}
+	cmd, err := xhyve.Command(xhyveCfg)
 	if err != nil {
 		plog.Errorf("error creating command: %v", err)
 	}
-	plog.Debugf("executing '%s'", strings.Join(cmd.Args, " "))
+	if dryRun {
+		plog.Infof("%s", strings.Join(cmd.Args, " "))
+		return
+	}
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
+	plog.Debugf("executing '%s'", strings.Join(cmd.Args, " "))
 	err = cmd.Run()
 	if err != nil {
 		plog.Errorf("error running xhyve: %v", err)
